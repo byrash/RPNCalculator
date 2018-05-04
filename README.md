@@ -45,7 +45,7 @@ In order to get around firewall issues we recommend the solution be packaged as 
 4) slf4j via logback for logging
 5) Maven
 
-_This solution was developed using TDD approach._
+_**This solution was developed using TDD approach**._
 
 
 **_How to run ??_**
