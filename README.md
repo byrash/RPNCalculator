@@ -1,3 +1,7 @@
+**Build Status**
+
+[![Build Status](https://travis-ci.org/byrash/RPNCalculator.svg?branch=master)](https://travis-ci.org/byrash/RPNCalculator)
+
 **Problem Statement & Expectation**
 
 _**Requirements**_
