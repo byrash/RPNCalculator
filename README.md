@@ -46,7 +46,7 @@ _This solution was developed using TDD approach._
 
 **_How to run ??_**
 ```text
-git clone <REPOSITORY_PATH> ./RPNCalculator
+git clone https://github.com/byrash/RPNCalculator.git ./RPNCalculator
 
 cd RPNCalculator
 
