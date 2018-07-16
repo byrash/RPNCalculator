@@ -55,13 +55,13 @@ class OperationCalcTest {
 
   @Test
   void doCalc_undoFails() {
-    assertThrows(
-        IllegalArgumentException.class, () -> OperationCalc.doCalc(Operation.UNDO, null));
+    assertThrows(IllegalArgumentException.class, () -> OperationCalc.doCalc(Operation.UNDO, null));
   }
 
   @Test
   void doCalc_addWithOneParams() {
     assertThrows(
-        IllegalArgumentException.class, () -> OperationCalc.doCalc(Operation.ADD, new BigDecimal(1.0)));
+        IllegalArgumentException.class,
+        () -> OperationCalc.doCalc(Operation.ADD, new BigDecimal(1.0)));
   }
 }
