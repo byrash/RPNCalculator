@@ -13,6 +13,9 @@ import java.math.RoundingMode;
  */
 public class BigDecimalSqrtUtil {
 
+  private BigDecimalSqrtUtil() {
+  }
+
   private static final BigDecimal SQRT_DIG = BigDecimal.valueOf(150);
   private static final BigDecimal SQRT_PRE = BigDecimal.valueOf(10).pow(SQRT_DIG.intValue());
 

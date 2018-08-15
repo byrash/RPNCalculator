@@ -9,40 +9,12 @@ import java.util.NoSuchElementException;
  */
 public class Solution {
 
-  public int solution(String S) {
-    String[] split = S.split("\\s");
+  public int solution(String rpnString) {
+    String[] split = rpnString.split("\\s");
     Deque<Integer> stack = new ArrayDeque<>();
     for (String str : split) {
       try {
-        try {
-          int anInt = Integer.parseInt(str);
-          invalidIntCheck(anInt);
-          stack.push(anInt);
-        } catch (NumberFormatException ne) {
-          Operation operation = Operation.parse(str);
-          switch (operation) {
-            case DUP:
-              stack.push(stack.getFirst());
-              break;
-            case POP:
-              stack.pop();
-              break;
-            case PLUS:
-              Integer lhsForAdd = stack.pop();
-              Integer rhsForAdd = stack.pop();
-              int add = lhsForAdd + rhsForAdd;
-              invalidIntCheck(add);
-              stack.push(add);
-              break;
-            case MINUS:
-              Integer lhsForSub = stack.pop();
-              Integer rhsForSub = stack.pop();
-              int sub = lhsForSub - rhsForSub;
-              invalidIntCheck(sub);
-              stack.push(sub);
-              break;
-          }
-        }
+        processInputString(stack, str);
       } catch (NoSuchElementException e) {
         System.err.println("Insufficient elements on stack to perform operation.");
         return -1;
@@ -59,6 +31,40 @@ public class Solution {
       return -1;
     }
     return stack.getFirst();
+  }
+
+  private void processInputString(Deque<Integer> stack, String str) throws InvalidValueException {
+    try {
+      int anInt = Integer.parseInt(str);
+      invalidIntCheck(anInt);
+      stack.push(anInt);
+    } catch (NumberFormatException ne) {
+      Operation operation = Operation.parse(str);
+      switch (operation) {
+        case DUP:
+          stack.push(stack.getFirst());
+          break;
+        case POP:
+          stack.pop();
+          break;
+        case PLUS:
+          Integer lhsForAdd = stack.pop();
+          Integer rhsForAdd = stack.pop();
+          int add = lhsForAdd + rhsForAdd;
+          invalidIntCheck(add);
+          stack.push(add);
+          break;
+        case MINUS:
+          Integer lhsForSub = stack.pop();
+          Integer rhsForSub = stack.pop();
+          int sub = lhsForSub - rhsForSub;
+          invalidIntCheck(sub);
+          stack.push(sub);
+          break;
+        default:
+          break;
+      }
+    }
   }
 
   private void invalidIntCheck(int anInt) throws InvalidValueException {
@@ -90,7 +96,7 @@ public class Solution {
           return op;
         }
       }
-      throw new RuntimeException("Invalid Operation");
+      throw new IllegalArgumentException("Invalid Operation");
     }
 
     public String getVal() {

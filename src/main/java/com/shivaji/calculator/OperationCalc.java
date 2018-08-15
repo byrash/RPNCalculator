@@ -14,6 +14,9 @@ import org.slf4j.LoggerFactory;
  */
 public class OperationCalc {
 
+  private OperationCalc() {
+  }
+
   private static final Logger LOG = LoggerFactory.getLogger(OperationCalc.class);
 
   // At least 15 scale is required as per requirement

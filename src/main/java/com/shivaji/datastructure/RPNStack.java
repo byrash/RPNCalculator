@@ -10,8 +10,6 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A Generic wrapper on top of Array Deque Implementation to support stack operations whilst making
@@ -26,8 +24,6 @@ import org.slf4j.LoggerFactory;
  * @author Shivaji
  */
 public class RPNStack {
-
-  private static final Logger LOG = LoggerFactory.getLogger(RPNStack.class);
 
   // Ensuring thread safe i.e read consistency just in case this object is shared in a threaded
   // environment.

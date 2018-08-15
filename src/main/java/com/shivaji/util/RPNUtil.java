@@ -19,6 +19,9 @@ import org.apache.commons.lang3.math.NumberUtils;
  */
 public class RPNUtil {
 
+  private RPNUtil() {
+  }
+
   /** Decides if the given token can be parsed to a number or operation we accept */
   private static final Predicate<String> isParsableToNumberOrAcceptableOperation =
       item -> NumberUtils.isCreatable(item) || Operation.parse(item).isPresent();

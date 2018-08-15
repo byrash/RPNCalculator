@@ -4,9 +4,9 @@ import static com.shivaji.util.RPNUtil.parseAndCleanseInputStr;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
-import static org.apache.commons.lang3.StringUtils.join;
 
 import com.shivaji.calculator.Operation;
 import com.shivaji.datastructure.RPNStack;
@@ -15,7 +15,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +63,7 @@ public class RPNCalculator {
       return getStackForDisplay();
     }
     List<String> tokens = parseAndCleanseInputStr(inputStr);
-    LOG.info("Input considered after cleansing --> {}", join(tokens, SPACE));
+    LOG.info("Input considered after cleansing --> {}", tokens.stream().collect(joining(SPACE)));
     boolean continueWithNextItem = TRUE;
 
     // Using legacy loop to mitigate with breaking the flow
@@ -82,29 +81,31 @@ public class RPNCalculator {
         rpnStack.push(of(new BigDecimal(token)));
       } else { // Operation
         Optional<Operation> parse = Operation.parse(token);
-        // No Point is checking is present, as cleansing has confirmed this
-        switch (parse.get()) {
-          case UNDO:
-            continueWithNextItem = undo(index);
-            break;
-          case CLEAR:
-            rpnStack.clear(); // Clear is always possible
-            break;
-          case ADD:
-            continueWithNextItem = mathOperation(index, Operation.ADD);
-            break;
-          case SUB:
-            continueWithNextItem = mathOperation(index, Operation.SUB);
-            break;
-          case MUL:
-            continueWithNextItem = mathOperation(index, Operation.MUL);
-            break;
-          case DIV:
-            continueWithNextItem = mathOperation(index, Operation.DIV);
-            break;
-          case SQRT:
-            continueWithNextItem = mathOperation(index, Operation.SQRT);
-            break;
+        if (parse.isPresent()) {
+          // No Point is checking is present, as cleansing has confirmed this
+          switch (parse.get()) {
+            case UNDO:
+              continueWithNextItem = undo(index);
+              break;
+            case CLEAR:
+              rpnStack.clear(); // Clear is always possible
+              break;
+            case ADD:
+              continueWithNextItem = mathOperation(index, Operation.ADD);
+              break;
+            case SUB:
+              continueWithNextItem = mathOperation(index, Operation.SUB);
+              break;
+            case MUL:
+              continueWithNextItem = mathOperation(index, Operation.MUL);
+              break;
+            case DIV:
+              continueWithNextItem = mathOperation(index, Operation.DIV);
+              break;
+            case SQRT:
+              continueWithNextItem = mathOperation(index, Operation.SQRT);
+              break;
+          }
         }
       }
     }
@@ -136,7 +137,7 @@ public class RPNCalculator {
         .list()
         .stream()
         .map(RPNUtil.bigDecimalWith10DecimalPlacesStr)
-        .collect(Collectors.joining(SPACE));
+        .collect(joining(SPACE));
   }
 
   private void inSufficientParametersMsg(String operation, int index) {
