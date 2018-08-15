@@ -1,5 +1,9 @@
 package com.shivaji.datastructure;
 
+import static com.shivaji.calculator.OperationCalc.doCalc;
+
+import com.shivaji.calculator.Operation;
+import java.math.BigDecimal;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,46 +25,22 @@ import org.slf4j.LoggerFactory;
  *
  * @author Shivaji
  */
-public class RPNStack<T> {
+public class RPNStack {
 
   private static final Logger LOG = LoggerFactory.getLogger(RPNStack.class);
 
   // Ensuring thread safe i.e read consistency just in case this object is shared in a threaded
   // environment.
   // Volatile keyword is my life saver here for worst case threaded scenario.
-  private volatile Deque<Deque<T>> _stackStashes;
+  private volatile Deque<RPNActivityVo> rpnActivityStack;
+  private volatile Deque<BigDecimal> stack;
 
   /** constructors intis the stacks */
   public RPNStack() {
     super();
     // Mutating the sate of stack per instance to support multiple actions on the stack
-    this._stackStashes = new ArrayDeque<>(); // Stack stash holder is again a stack by itself
-    this._stackStashes.push(new ArrayDeque<>()); // Bootstrapping with an empty stack on stack stash
-  }
-
-  /**
-   * Returns teh current stack that is being used from stackStash i.e the latest on stack stash
-   *
-   * @return
-   */
-  private Deque<T> getCurrentStack() {
-    return this._stackStashes.peek();
-  }
-
-  /**
-   * Stashes the current state of current stack item and pushes a new stack with a clone of current
-   * stack to work on
-   *
-   * @return
-   */
-  private Deque<T> stashAndGetNewStack() {
-    this._stackStashes.push(((ArrayDeque<T>) getCurrentStack()).clone());
-    return getCurrentStack();
-  }
-
-  /** Polished API for external usage with internally use <link>stashAndGetNewStack</link> */
-  public void stash() {
-    stashAndGetNewStack();
+    this.rpnActivityStack = new ArrayDeque<>();
+    this.stack = new ArrayDeque<>();
   }
 
   /**
@@ -68,29 +48,13 @@ public class RPNStack<T> {
    *
    * @param objToPush
    */
-  public void pushWithStashing(Optional<T> objToPush) {
-    LOG.debug("Pushing with Stashing");
+  public void push(Optional<BigDecimal> objToPush) {
     if (objToPush.isPresent()) {
-      stashAndGetNewStack().push(objToPush.get());
+      BigDecimal value = objToPush.get();
+      RPNActivityVo rpnActivityVo = new RPNActivityVo();
+      this.rpnActivityStack.push(rpnActivityVo);
+      this.stack.push(value);
     }
-    // I dont care if nothing is supplied
-    // Moreover I dont expect a null to be passed to push onto stack as it should be valid math
-    // action or value
-  }
-
-  /**
-   * push an element to stack without stashing the state
-   *
-   * @param objToPush
-   */
-  public void pushWithoutStashing(Optional<T> objToPush) {
-    LOG.debug("Pushing with out Stashing");
-    if (objToPush.isPresent()) {
-      getCurrentStack().push(objToPush.get());
-    }
-    // I dont care if nothing is supplied
-    // Moreover I dont expect a null to be passed to push onto stack as it should be valid math
-    // action or value
   }
 
   /**
@@ -98,33 +62,28 @@ public class RPNStack<T> {
    *
    * @return
    */
-  public Optional<T> popWithOutStashing() {
-    LOG.debug("Poping with Out Stashing");
-    // Only if stack is not empty
-    if (!this.isEmpty()) {
-      return Optional.of(getCurrentStack().pop());
+  public void performOperation(Operation operation) {
+    boolean isSqrtOperation = operation.equals(Operation.SQRT);
+    RPNActivityVo rpnActivityVo = new RPNActivityVo();
+    if (isSqrtOperation) {
+      BigDecimal pop = this.stack.pop();
+      rpnActivityVo.getValues().add(pop);
+      rpnActivityVo.setOperation(operation);
+      this.rpnActivityStack.push(rpnActivityVo);
+      this.stack.push(doCalc(operation, pop, null));
+    } else {
+      BigDecimal lhs = this.stack.pop();
+      BigDecimal rhs = this.stack.pop();
+      rpnActivityVo.getValues().add(rhs);
+      rpnActivityVo.getValues().add(lhs);
+      rpnActivityVo.setOperation(operation);
+      this.rpnActivityStack.push(rpnActivityVo);
+      this.stack.push(doCalc(operation, lhs, rhs));
     }
-    // Nothing to pop off. NPE saver Optional
-    return Optional.empty();
-  }
-
-  /**
-   * Pops an element from the stack
-   *
-   * @return
-   */
-  public Optional<T> popWithStashing() {
-    LOG.debug("Poping with Stashing");
-    // Only if stack is not empty
-    if (!this.isEmpty()) {
-      return Optional.of(stashAndGetNewStack().pop());
-    }
-    // Nothing to pop off. NPE saver Optional
-    return Optional.empty();
   }
 
   public boolean isEmpty() {
-    return getCurrentStack().isEmpty();
+    return this.stack.isEmpty();
   }
 
   /**
@@ -132,9 +91,9 @@ public class RPNStack<T> {
    *
    * @return
    */
-  public List<T> list() {
-    List<T> items = new ArrayList<>(this.size());
-    getCurrentStack().iterator().forEachRemaining(items::add);
+  public List<BigDecimal> list() {
+    List<BigDecimal> items = new ArrayList<>(this.size());
+    this.stack.iterator().forEachRemaining(items::add);
     Collections.reverse(items);
     return items;
   }
@@ -144,9 +103,9 @@ public class RPNStack<T> {
    *
    * @return
    */
-  public Optional<T> peek() {
+  public Optional<BigDecimal> peak() {
     if (!this.isEmpty()) {
-      return Optional.of(getCurrentStack().getFirst());
+      return Optional.of(this.stack.getFirst());
     }
     return Optional.empty();
   }
@@ -157,12 +116,18 @@ public class RPNStack<T> {
    * @return
    */
   public int size() {
-    return getCurrentStack().size();
+    return this.stack.size();
   }
 
   /** Clears everything off the queue */
-  public void stashAndclear() {
-    stashAndGetNewStack().clear();
+  public void clear() {
+    if (this.stack.isEmpty()) {
+      return;
+    }
+    RPNActivityVo rpnActivityVo = new RPNActivityVo();
+    rpnActivityVo.getValues().addAll(list());
+    this.rpnActivityStack.push(rpnActivityVo);
+    this.stack.clear();
   }
 
   /**
@@ -172,12 +137,12 @@ public class RPNStack<T> {
    * @return
    */
   public boolean undo() {
-    // We insert initial stack to bootstrap and so undo is possible only for action latter boot
-    // strapping
-    if (this._stackStashes.size() <= 1) {
-      return false;
+    if (this.rpnActivityStack.isEmpty()) {
+      return false; // Nothing to remove
     }
-    this._stackStashes.pop();
+    this.stack.pop();
+    RPNActivityVo rpnActivityVo = this.rpnActivityStack.pop();
+    rpnActivityVo.getValues().forEach(item -> this.stack.push(item));
     return true;
   }
 

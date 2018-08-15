@@ -72,14 +72,6 @@ public class Solution {
 
   }
 
-  public static void main(String[] args) {
-    Solution obj = new Solution();
-    // 13 DUP 4 POP 5 DUP + DUP + -
-    System.out.println(obj.solution("5 6 + -"));
-    System.out.println(obj.solution("3 DUP 5 - -"));
-    System.out.println(obj.solution("13 DUP 4 POP 5 DUP + DUP + -"));
-  }
-
   private enum Operation {
     PUSH("PUSH"),
     POP("POP"),

@@ -1,10 +1,14 @@
 package com.shivaji;
 
 import static com.shivaji.util.RPNUtil.parseAndCleanseInputStr;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+import static java.util.Optional.of;
 import static org.apache.commons.lang3.StringUtils.SPACE;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.join;
 
 import com.shivaji.calculator.Operation;
-import com.shivaji.calculator.OperationCalc;
 import com.shivaji.datastructure.RPNStack;
 import com.shivaji.util.RPNUtil;
 import java.math.BigDecimal;
@@ -12,7 +16,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +31,7 @@ public class RPNCalculator {
 
   private static final Logger LOG = LoggerFactory.getLogger(RPNCalculator.class);
 
-  private final RPNStack<BigDecimal> stack;
+  private final RPNStack rpnStack;
 
   public static void main(String[] args) {
     LOG.info(SPACE);
@@ -40,7 +43,7 @@ public class RPNCalculator {
     LOG.info(SPACE);
     Scanner scan = new Scanner(System.in);
     String input = null;
-    RPNCalculator rpnCalculator = new RPNCalculator(new RPNStack<>());
+    RPNCalculator rpnCalculator = new RPNCalculator(new RPNStack());
     while (!isExit(input)) {
       input = scan.nextLine();
       String resultStack = rpnCalculator.calculate(input);
@@ -49,11 +52,11 @@ public class RPNCalculator {
   }
 
   private static boolean isExit(String input) {
-    return StringUtils.equalsIgnoreCase(input, "exit");
+    return equalsIgnoreCase(input, "exit");
   }
 
-  public RPNCalculator(RPNStack<BigDecimal> stack) {
-    this.stack = stack;
+  RPNCalculator(RPNStack rpnStack) {
+    this.rpnStack = rpnStack;
   }
 
   public String calculate(String inputStr) {
@@ -61,8 +64,8 @@ public class RPNCalculator {
       return getStackForDisplay();
     }
     List<String> tokens = parseAndCleanseInputStr(inputStr);
-    LOG.info("Input considered after cleansing --> {}", StringUtils.join(tokens, SPACE));
-    boolean continueWithNextItem = Boolean.TRUE;
+    LOG.info("Input considered after cleansing --> {}", join(tokens, SPACE));
+    boolean continueWithNextItem = TRUE;
 
     // Using legacy loop to mitigate with breaking the flow
     // if any operation is not possible
@@ -76,16 +79,16 @@ public class RPNCalculator {
       String token = tokens.get(index);
 
       if (NumberUtils.isCreatable(token)) { // Number
-        stack.pushWithStashing(Optional.of(new BigDecimal(token)));
+        rpnStack.push(of(new BigDecimal(token)));
       } else { // Operation
         Optional<Operation> parse = Operation.parse(token);
         // No Point is checking is present, as cleansing has confirmed this
         switch (parse.get()) {
           case UNDO:
-            continueWithNextItem = undo(continueWithNextItem, index);
+            continueWithNextItem = undo(index);
             break;
           case CLEAR:
-            stack.stashAndclear(); // Clear is always possible
+            rpnStack.clear(); // Clear is always possible
             break;
           case ADD:
             continueWithNextItem = mathOperation(index, Operation.ADD);
@@ -111,37 +114,29 @@ public class RPNCalculator {
 
   private boolean mathOperation(int index, Operation operation) {
     boolean isSqrtOperation = operation.equals(Operation.SQRT);
-    if (stack.hasAtleastTwoItems() || (isSqrtOperation && stack.hasAtleastOneItem())) {
-      stack.stash();
-      stack.pushWithoutStashing(
-          Optional.of(
-              OperationCalc.doCalc(
-                  operation,
-                  stack.popWithOutStashing().get(),
-                  isSqrtOperation ? null : stack.popWithOutStashing().get())));
-      return Boolean.TRUE;
+    if (rpnStack.hasAtleastTwoItems() || (isSqrtOperation && rpnStack.hasAtleastOneItem())) {
+      rpnStack.performOperation(operation);
+      return TRUE;
     }
     inSufficientParametersMsg(operation.getVal(), index);
-    return Boolean.FALSE;
+    return FALSE;
   }
 
-  private boolean undo(boolean continueWithNextItem, int index) {
-    boolean isUndoSuccess = stack.undo();
+  private boolean undo(int index) {
+    boolean isUndoSuccess = rpnStack.undo();
     if (!isUndoSuccess) {
       inSufficientParametersMsg(Operation.UNDO.getVal(), index);
-      continueWithNextItem = false;
+      return FALSE;
     }
-    return continueWithNextItem;
+    return TRUE;
   }
 
   private String getStackForDisplay() {
-    List<String> stackList =
-        stack
-            .list()
-            .stream()
-            .map(RPNUtil.bigDecimalWith10DecimalPlacesStr)
-            .collect(Collectors.toList());
-    return StringUtils.join(stackList, SPACE);
+    return rpnStack
+        .list()
+        .stream()
+        .map(RPNUtil.bigDecimalWith10DecimalPlacesStr)
+        .collect(Collectors.joining(SPACE));
   }
 
   private void inSufficientParametersMsg(String operation, int index) {
@@ -149,7 +144,6 @@ public class RPNCalculator {
     //    int position = ( index + 1); // This is ideal position of opeartion however in problem
     // statement example it sounded like they wanted above as there in a ambigeous requirement
     // statement about  position
-
     LOG.warn("operator {} (position: {}): insufficient parameters", operation, position);
   }
 }

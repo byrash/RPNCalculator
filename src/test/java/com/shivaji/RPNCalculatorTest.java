@@ -16,7 +16,7 @@ class RPNCalculatorTest {
   @BeforeEach
   void setUp() {
     // New object for every operation
-    objUnderTest = new RPNCalculator(new RPNStack<>());
+    objUnderTest = new RPNCalculator(new RPNStack());
   }
 
   @AfterEach

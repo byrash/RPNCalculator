@@ -1,5 +1,7 @@
 package com.shivaji.util;
 
+import static org.apache.commons.lang3.StringUtils.split;
+
 import com.shivaji.calculator.Operation;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -8,7 +10,6 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
 /**
@@ -32,7 +33,7 @@ public class RPNUtil {
    * @return
    */
   public static List<String> parseAndCleanseInputStr(String inputStr) {
-    return Arrays.stream(StringUtils.split(inputStr.trim()))
+    return Arrays.stream(split(inputStr.trim()))
         .filter(isParsableToNumberOrAcceptableOperation)
         .collect(Collectors.toList());
   }

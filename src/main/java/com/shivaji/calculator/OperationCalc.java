@@ -1,8 +1,9 @@
 package com.shivaji.calculator;
 
-import com.shivaji.util.BigDecimalSqrtUtil;
+import static com.shivaji.util.BigDecimalSqrtUtil.bigSqrt;
+import static java.math.RoundingMode.HALF_UP;
+
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,23 +40,23 @@ public class OperationCalc {
    * <p>Undo or clear should be not passed to this guy as theya re not calculations
    *
    * @param op
-   * @param item1
-   * @param item2
+   * @param lhs
+   * @param rhs
    * @return
    */
-  public static BigDecimal doCalc(Operation op, BigDecimal item1, BigDecimal item2) {
-    LOG.debug("Calculating for Operation [{}] with inputs {} and {}", op, item1, item2);
+  public static BigDecimal doCalc(Operation op, BigDecimal lhs, BigDecimal rhs) {
+    LOG.debug("Calculating for Operation [{}] with inputs {} and {}", op, lhs, rhs);
     switch (op) {
       case ADD:
-        return setScale(item1.add(item2));
+        return setScale(lhs.add(rhs));
       case SQRT:
-        return setScale(BigDecimalSqrtUtil.bigSqrt(item1));
+        return setScale(bigSqrt(lhs));
       case DIV:
-        return item2.divide(item1, SCALE, RoundingMode.HALF_UP);
+        return rhs.divide(lhs, SCALE, HALF_UP);
       case MUL:
-        return setScale(item1.multiply(item2));
+        return setScale(lhs.multiply(rhs));
       case SUB:
-        return setScale(item2.subtract(item1));
+        return setScale(rhs.subtract(lhs));
       default:
         throw new IllegalArgumentException("Un Acceptable Operation [" + op + "]");
     }
@@ -68,6 +69,6 @@ public class OperationCalc {
    * @return
    */
   private static BigDecimal setScale(BigDecimal obj) {
-    return obj.setScale(SCALE, RoundingMode.HALF_UP);
+    return obj.setScale(SCALE, HALF_UP);
   }
 }
